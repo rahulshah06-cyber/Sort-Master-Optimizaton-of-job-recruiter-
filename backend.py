@@ -3,27 +3,21 @@ import re
 import heapq
 import datetime
 
-# Load the dataset
 df = pd.read_csv("job_candidates.csv")
 
-# Remove duplicate rows
 df.drop_duplicates(inplace=True)
 
-# Drop irrelevant columns if they exist
 irrelevant_columns = ['Contact', 'Job Portal', 'Company Profile']
 df.drop(columns=[col for col in irrelevant_columns if col in df.columns], inplace=True)
 
-# Fill missing values
 df['Experience'] = df['Experience'].fillna("0 Years")
 df['skills'] = df['skills'].fillna("")
 
-# Clean text: remove leading/trailing whitespace and reduce multiple spaces
 def clean_text(text):
     if isinstance(text, str):
         return re.sub(r'\s+', ' ', text.strip())
     return text
 
-# Apply text cleaning to important text columns
 text_cols = ['Contact Person', 'Experience', 'Qualifications', 'location', 'Country',
              'Work Type', 'Preference', 'Job Title', 'Role', 'Job Description', 'Benefits', 'skills',
              'Responsibilities', 'Company']
@@ -32,14 +26,12 @@ for col in text_cols:
     if col in df.columns:
         df[col] = df[col].apply(clean_text)
 
-# Extract numeric years of experience
 def extract_min_experience(exp):
     match = re.search(r'(\d+)', str(exp))
     return int(match.group(1)) if match else 0
 
 df['Experience_Value'] = df['Experience'].apply(extract_min_experience)
 
-# Convert salary range string like "20K-40K" to average midpoint
 def salary_to_midpoint(s):
     if isinstance(s, str):
         numbers = [int(n.replace('K', '')) for n in re.findall(r'\d+K', s)]
@@ -49,17 +41,13 @@ def salary_to_midpoint(s):
 
 df['Salary_Mid'] = df['Salary Range'].apply(salary_to_midpoint)
 
-# Filter out entries with 0 years experience
 df = df[df['Experience_Value'] > 0]
 
-# Reset index after filtering
 df.reset_index(drop=True, inplace=True)
 
-# Save the cleaned data
 df.to_csv("cleaned_candidates.csv", index=False)
 print("\nData cleaned and saved to 'cleaned_candidates.csv'.")
 
-# Filtering logic based on user input
 def apply_filters(df_original):
     while True:
         df_filtered = df_original.copy()
@@ -89,15 +77,10 @@ def apply_filters(df_original):
         else:
             return df_filtered.reset_index(drop=True)
 
-# Apply the filtering step
 df = apply_filters(df)
 
-# Convert DataFrame rows to a list of tuples for sorting
 candidates = [(i, df.loc[i, 'Experience_Value'], df.loc[i]) for i in df.index]
 
-# ---------------- Sorting Algorithms ---------------- #
-
-# Merge Sort
 def merge_sort(arr):
     if len(arr) > 1:
         mid = len(arr) // 2
@@ -115,7 +98,6 @@ def merge(left, right):
             result.append(right.pop(0))
     return result + left + right
 
-# Quick Sort
 def quick_sort(arr):
     if len(arr) <= 1:
         return arr
@@ -125,7 +107,6 @@ def quick_sort(arr):
     right = [x for x in arr if x[1] < pivot]
     return quick_sort(left) + middle + quick_sort(right)
 
-# Heap Sort
 def heap_sort(arr):
     heap = [(-x[1], i, x) for i, x in enumerate(arr)]
     heapq.heapify(heap)
@@ -135,12 +116,10 @@ def heap_sort(arr):
         sorted_list.append(item)
     return sorted_list
 
-# Apply sorting methods
 sorted_merge = merge_sort(candidates.copy())
 sorted_quick = quick_sort(candidates.copy())
 sorted_heap = heap_sort(candidates.copy())
 
-# Create dictionaries mapping candidate index to rank
 def build_rank_dict(sorted_list):
     return {item[0]: rank for rank, item in enumerate(sorted_list)}
 
@@ -148,16 +127,13 @@ merge_ranks = build_rank_dict(sorted_merge)
 quick_ranks = build_rank_dict(sorted_quick)
 heap_ranks = build_rank_dict(sorted_heap)
 
-# Compute average ranks across all algorithms
 average_ranks = []
 for i in df.index:
     avg_rank = (merge_ranks[i] + quick_ranks[i] + heap_ranks[i]) / 3
     average_ranks.append((i, avg_rank, df.loc[i]))
 
-# Sort candidates by average rank (lower is better)
 final_sorted = sorted(average_ranks, key=lambda x: x[1])
 
-# Display top N candidates
 try:
     top_n = int(input("\nHow many top candidates would you like to see? (default = 5): ").strip())
 except ValueError:
@@ -175,7 +151,6 @@ for rank, (_, score, row) in enumerate(final_sorted[:top_n], start=1):
     row_data['Average Rank Score'] = round(score, 2)
     top_rows.append(row_data)
 
-# Export top candidates to file
 export_df = pd.DataFrame(top_rows)
 export_format = input("\nExport results? Type 'csv', 'excel' or press Enter to skip: ").strip().lower()
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
