@@ -1,0 +1,10 @@
+streamlit==1.26.0
+pandas==2.1.0
+openpyxl==3.1.2
+python-dotenv==0.20.0
+numpy
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+oauth2client
+xlsxwriter>=3.0.9
