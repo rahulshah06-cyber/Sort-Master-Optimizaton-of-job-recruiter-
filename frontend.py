@@ -4,9 +4,6 @@ import re
 from io import BytesIO
 import base64
 
-# ==============================================
-# CSS STYLING (Embedded for better portability)
-# ==============================================
 st.markdown("""
 <style>
 :root {
@@ -145,30 +142,20 @@ h1 {
 </style>
 """, unsafe_allow_html=True)
 
-# ==============================================
-# SESSION STATE INITIALIZATION
-# ==============================================
 if 'filtered' not in st.session_state:
     st.session_state.filtered = False
 if 'df' not in st.session_state:
     st.session_state.df = None
 
-# ==============================================
-# PAGE LAYOUT
-# ==============================================
 st.markdown("<h1>🎯 Candidate Filter Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<p style='color: #64748b; font-size: 1.1rem;'>Filter and rank job candidates with precision</p>", unsafe_allow_html=True)
 
-# ==============================================
-# SIDEBAR - UPLOAD AND FILTERS
-# ==============================================
 with st.sidebar:
     st.markdown("<h2 style='color: white;'>📁 Data Upload</h2>", unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Choose CSV or Excel file", type=["csv", "xlsx"], label_visibility="collapsed")
 
     if uploaded_file is not None:
         try:
-            # Load Data
             if uploaded_file.name.endswith('.csv'):
                 df = pd.read_csv(uploaded_file)
             else:
@@ -176,7 +163,6 @@ with st.sidebar:
 
             st.session_state.df = df
 
-            # Extract numeric experience
             if "Experience" in df.columns:
                 df['Experience_Value'] = df['Experience'].apply(
                     lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) and re.search(r'\d+', str(x)) else 0
@@ -186,7 +172,6 @@ with st.sidebar:
 
             st.success("✅ File successfully loaded")
 
-            # Filter controls
             st.markdown("<h2 style='color: white; margin-top: 1.5rem;'>🔍 Filter Controls</h2>", unsafe_allow_html=True)
             min_exp = st.slider("Minimum Experience (years)", 0, 30, 0)
 
@@ -210,7 +195,6 @@ with st.sidebar:
             role_contains = st.text_input("Role Keywords") if 'Role' in df.columns else ""
             location_contains = st.text_input("Location Keywords") if 'location' in df.columns else ""
 
-            # Action buttons
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Apply Filters", type="primary"):
@@ -227,9 +211,6 @@ with st.sidebar:
         st.warning("Please upload a data file to begin")
         st.stop()
 
-# ==============================================
-# MAIN CONTENT AREA
-# ==============================================
 if st.session_state.filtered and st.session_state.df is not None:
     df = st.session_state.df.copy()
 
@@ -250,7 +231,6 @@ if st.session_state.filtered and st.session_state.df is not None:
     if location_contains and 'location' in df.columns:
         df = df[df['location'].str.contains(location_contains, case=False, na=False)]
 
-    # Results summary
     st.markdown(f"<h2>👥 Filtered Candidates ({len(df)} found)</h2>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
@@ -259,7 +239,6 @@ if st.session_state.filtered and st.session_state.df is not None:
         avg_exp = df['Experience_Value'].mean() if len(df) > 0 else 0
         st.metric("Average Experience", f"{avg_exp:.1f} years")
 
-    # Top Candidates
     st.markdown("---")
     st.markdown("<h2>🏆 Top Candidates</h2>", unsafe_allow_html=True)
 
@@ -286,7 +265,6 @@ if st.session_state.filtered and st.session_state.df is not None:
     else:
         st.warning("No candidates match your filters")
 
-    # Table
     st.markdown("---")
     st.markdown("<h2>📋 Complete Results</h2>", unsafe_allow_html=True)
     display_cols = [col for col in ['Contact Person', 'Role', 'Job_Title', 'Experience', 'location', 'Qualifications', 'Work_Type'] if col in df.columns]
@@ -295,7 +273,6 @@ if st.session_state.filtered and st.session_state.df is not None:
     else:
         st.warning("No displayable columns found in the data")
 
-    # Export
     st.markdown("---")
     st.markdown("<h2>📤 Export Results</h2>", unsafe_allow_html=True)
     export_format = st.radio("Export format", options=["CSV", "Excel"], horizontal=True)
@@ -315,11 +292,6 @@ if st.session_state.filtered and st.session_state.df is not None:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-
-
-# ==============================================
-# FOOTER
-# ==============================================
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #64748b; margin-top: 2rem;">
@@ -327,16 +299,5 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# This is a Streamlit app that filters and displays candidate data
-# The app provides features to:
-# 1. Upload candidate data from CSV or Excel files
-# 2. Filter candidates based on experience, qualifications, and other criteria
-# 3. View and export filtered results
-
-# To run this app:
-# 1. Ensure you have Streamlit installed (pip install streamlit)
-# 2. Run the app using: streamlit run frontend.py
-
 if __name__ == '__main__':
-    # This is the main entry point for the Streamlit app
     pass
